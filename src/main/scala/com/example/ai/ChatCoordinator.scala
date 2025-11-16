@@ -70,15 +70,8 @@ object ChatCoordinator {
             val assistantMsg = Message("assistant", content)
             conversationManager ! AddMessage(assistantMsg)
             
-            // Get updated history and send response
-            context.ask(conversationManager, GetHistory.apply) {
-              case scala.util.Success(history) =>
-                originalReplyTo ! ChatSuccess(content, history.messages)
-                HandleChatRequest(ChatRequest("", context.system.ignoreRef)) // dummy message
-              case scala.util.Failure(_) =>
-                originalReplyTo ! ChatSuccess(content, List.empty)
-                HandleChatRequest(ChatRequest("", context.system.ignoreRef)) // dummy message
-            }
+            // Send response to original requester
+            originalReplyTo ! ChatSuccess(content, List.empty)
             
           case LLMFailure(error) =>
             context.log.error("LLM request failed: {}", error)

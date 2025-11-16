@@ -4,7 +4,7 @@ version := "1.0"
 
 scalaVersion := s"3.3.7"
 
-lazy val akkaVersion = "2.6.20"
+lazy val akkaVersion = "2.9.3"
 lazy val akkaHttpVersion = "10.5.2"
 lazy val circeVersion = "0.14.6"
 

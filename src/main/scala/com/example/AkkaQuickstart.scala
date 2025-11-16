@@ -1,80 +1,67 @@
-//#full-example
 package com.example
 
-
-import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorSystem
-import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import com.example.GreeterMain.SayHello
+import com.example.ai.ChatCoordinator
+import com.example.ai.Models._
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+import scala.io.StdIn
 
-//#greeter-actor
-object Greeter {
-  final case class Greet(whom: String, replyTo: ActorRef[Greeted])
-  final case class Greeted(whom: String, from: ActorRef[Greet])
-
-  def apply(): Behavior[Greet] = Behaviors.receive { (context, message) =>
-    context.log.info("Hello {}!", message.whom)
-    //#greeter-send-messages
-    message.replyTo ! Greeted(message.whom, context.self)
-    //#greeter-send-messages
-    Behaviors.same
-  }
-}
-//#greeter-actor
-
-//#greeter-bot
-object GreeterBot {
-
-  def apply(max: Int): Behavior[Greeter.Greeted] = {
-    bot(0, max)
-  }
-
-  private def bot(greetingCounter: Int, max: Int): Behavior[Greeter.Greeted] =
-    Behaviors.receive { (context, message) =>
-      val n = greetingCounter + 1
-      context.log.info("Greeting {} for {}", n, message.whom)
-      if (n == max) {
-        Behaviors.stopped
-      } else {
-        message.from ! Greeter.Greet(message.whom, context.self)
-        bot(n, max)
-      }
-    }
-}
-//#greeter-bot
-
-//#greeter-main
-object GreeterMain {
-
-  final case class SayHello(name: String)
-
-  def apply(): Behavior[SayHello] =
-    Behaviors.setup { context =>
-      //#create-actors
-      val greeter = context.spawn(Greeter(), "greeter")
-      //#create-actors
-
-      Behaviors.receiveMessage { message =>
-        //#create-actors
-        val replyTo = context.spawn(GreeterBot(max = 3), message.name)
-        //#create-actors
-        greeter ! Greeter.Greet(message.name, replyTo)
-        Behaviors.same
-      }
-    }
-}
-//#greeter-main
-
-//#main-class
 object AkkaQuickstart extends App {
-  //#actor-system
-  val greeterMain: ActorSystem[GreeterMain.SayHello] = ActorSystem(GreeterMain(), "AkkaQuickStart")
-  //#actor-system
-
-  //#main-send-messages
-  greeterMain ! SayHello("Charles")
-  //#main-send-messages
+  
+  // Get API key from environment variable
+  val apiKey = sys.env.getOrElse("OPENAI_API_KEY", {
+    println("ERROR: OPENAI_API_KEY environment variable not set")
+    println("Please set it with: export OPENAI_API_KEY=your-api-key")
+    sys.exit(1)
+  })
+  
+  println("=== AI Chat Application ===")
+  println("Type your messages and press Enter. Type 'quit' to exit.\n")
+  
+  val system = ActorSystem(Behaviors.setup[ChatCoordinator.CoordinatorCommand] { context =>
+    val coordinator = context.spawn(ChatCoordinator(apiKey), "chat-coordinator")
+    
+    Behaviors.receiveMessage { msg =>
+      coordinator ! msg
+      Behaviors.same
+    }
+  }, "ai-chat-system")
+  
+  implicit val ec = system.executionContext
+  
+  // Interactive chat loop
+  var continue = true
+  while (continue) {
+    print("You: ")
+    val input = StdIn.readLine()
+    
+    if (input == null || input.trim.toLowerCase == "quit") {
+      continue = false
+    } else if (input.trim.nonEmpty) {
+      // Send message and wait for response
+      val responseFuture = system.ask[ChatResponse] { replyTo =>
+        ChatCoordinator.HandleChatRequest(ChatRequest(input.trim, replyTo))
+      }(timeout = 30.seconds, scheduler = system.scheduler)
+      
+      try {
+        val response = Await.result(responseFuture, 30.seconds)
+        response match {
+          case ChatSuccess(content, _) =>
+            println(s"\nAssistant: $content\n")
+          case ChatError(error) =>
+            println(s"\nError: $error\n")
+        }
+      } catch {
+        case ex: Exception =>
+          println(s"\nError: ${ex.getMessage}\n")
+      }
+    }
+  }
+  
+  println("\nShutting down...")
+  system.terminate()
+  Await.result(system.whenTerminated, 10.seconds)
+  println("Goodbye!")
 }
-//#main-class
-//#full-example

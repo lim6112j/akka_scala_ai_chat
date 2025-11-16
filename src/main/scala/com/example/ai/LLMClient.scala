@@ -108,12 +108,13 @@ object LLMClient {
           context.log.error("OpenAI API returned error status: {}", response.status)
           val errorFuture = response.entity.toStrict(scala.concurrent.duration.Duration(10, "seconds")).map { entity =>
             val errorBody = entity.data.utf8String
-            context.log.error("Error response body: {}", errorBody)
-            replyTo ! LLMFailure(s"OpenAI API error: ${response.status} - $errorBody")
+            LLMFailure(s"OpenAI API error: ${response.status} - $errorBody")
           }
           
           context.pipeToSelf(errorFuture) {
-            case Success(_) => NoOp
+            case Success(failure) => 
+              replyTo ! failure
+              NoOp
             case Failure(ex) => ProcessError(ex, replyTo)
           }
           
@@ -121,29 +122,31 @@ object LLMClient {
         } else {
           val resultFuture = response.entity.toStrict(scala.concurrent.duration.Duration(10, "seconds")).map { entity =>
             val responseBody = entity.data.utf8String
-            context.log.info("Response body: {}", responseBody)
             
             decode[OpenAIResponse](responseBody) match {
               case Right(openAIResponse) =>
                 if (openAIResponse.choices.nonEmpty) {
                   val content = openAIResponse.choices.head.message.content
-                  context.log.info("Received response from OpenAI: {}", content.take(100))
-                  replyTo ! LLMSuccess(content)
+                  LLMSuccess(content)
                 } else {
-                  context.log.error("No choices in OpenAI response")
-                  replyTo ! LLMFailure("No response from LLM")
+                  LLMFailure("No response from LLM")
                 }
               case Left(error) =>
-                context.log.error("Failed to parse OpenAI response: {}", error.getMessage)
-                context.log.error("Response body was: {}", responseBody)
-                replyTo ! LLMFailure(s"Failed to parse response: ${error.getMessage}")
+                LLMFailure(s"Failed to parse response: ${error.getMessage}")
             }
           }
           
           context.pipeToSelf(resultFuture) {
-            case Success(_) => NoOp
+            case Success(llmResponse) => 
+              llmResponse match {
+                case success: LLMSuccess =>
+                  context.log.info("Received response from OpenAI: {}", success.content.take(100))
+                case failure: LLMFailure =>
+                  context.log.error("LLM failure: {}", failure.error)
+              }
+              replyTo ! llmResponse
+              NoOp
             case Failure(ex) => 
-              context.log.error("Failed to process response entity: {}", ex.getMessage, ex)
               ProcessError(ex, replyTo)
           }
           

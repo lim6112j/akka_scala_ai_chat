@@ -14,7 +14,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import com.example.ai.ChatCoordinator
 import com.example.ai.Models._
-import ch.megard.pekko.http.cors.scaladsl.CorsDirectives._
 
 object WebServer {
   
@@ -25,48 +24,46 @@ object WebServer {
     implicit val timeout: Timeout = Timeout(30.seconds)
     implicit val ec: ExecutionContext = system.executionContext
     
-    cors() {
-      concat(
-        pathSingleSlash {
-          get {
-            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, htmlPage))
-          }
-        },
-        path("api" / "chat") {
-          post {
-            entity(as[String]) { body =>
-              decode[ChatMessageRequest](body) match {
-                case Right(request) =>
-                  val responseFuture: Future[ChatResponse] = coordinator.ask { replyTo =>
-                    ChatCoordinator.HandleChatRequest(ChatRequest(request.message, replyTo))
-                  }
-                  
-                  onSuccess(responseFuture) {
-                    case ChatSuccess(content, _) =>
-                      complete(HttpEntity(
-                        ContentTypes.`application/json`,
-                        ChatMessageResponse(content, success = true).asJson.noSpaces
-                      ))
-                    case ChatError(error) =>
-                      complete(HttpEntity(
-                        ContentTypes.`application/json`,
-                        ChatMessageResponse("", success = false, Some(error)).asJson.noSpaces
-                      ))
-                  }
-                case Left(error) =>
-                  complete(StatusCodes.BadRequest, 
-                    ChatMessageResponse("", success = false, Some(s"Invalid JSON: ${error.getMessage}")).asJson.noSpaces)
-              }
+    concat(
+      pathSingleSlash {
+        get {
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, htmlPage))
+        }
+      },
+      path("api" / "chat") {
+        post {
+          entity(as[String]) { body =>
+            decode[ChatMessageRequest](body) match {
+              case Right(request) =>
+                val responseFuture: Future[ChatResponse] = coordinator.ask { replyTo =>
+                  ChatCoordinator.HandleChatRequest(ChatRequest(request.message, replyTo))
+                }
+                
+                onSuccess(responseFuture) {
+                  case ChatSuccess(content, _) =>
+                    complete(HttpEntity(
+                      ContentTypes.`application/json`,
+                      ChatMessageResponse(content, success = true).asJson.noSpaces
+                    ))
+                  case ChatError(error) =>
+                    complete(HttpEntity(
+                      ContentTypes.`application/json`,
+                      ChatMessageResponse("", success = false, Some(error)).asJson.noSpaces
+                    ))
+                }
+              case Left(error) =>
+                complete(StatusCodes.BadRequest, 
+                  ChatMessageResponse("", success = false, Some(s"Invalid JSON: ${error.getMessage}")).asJson.noSpaces)
             }
           }
-        },
-        path("health") {
-          get {
-            complete(HttpEntity(ContentTypes.`application/json`, """{"status":"ok"}"""))
-          }
         }
-      )
-    }
+      },
+      path("health") {
+        get {
+          complete(HttpEntity(ContentTypes.`application/json`, """{"status":"ok"}"""))
+        }
+      }
+    )
   }
   
   val htmlPage: String = """<!DOCTYPE html>

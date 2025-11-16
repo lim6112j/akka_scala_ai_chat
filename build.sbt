@@ -22,7 +22,6 @@ libraryDependencies ++= Seq(
   "org.apache.pekko" %% "pekko-stream" % pekkoVersion,
   "org.apache.pekko" %% "pekko-http" % pekkoHttpVersion,
   "org.apache.pekko" %% "pekko-http-spray-json" % pekkoHttpVersion,
-  "ch.megard" %% "pekko-http-cors" % "1.0.0",
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,

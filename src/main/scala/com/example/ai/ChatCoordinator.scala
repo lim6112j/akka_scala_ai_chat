@@ -28,7 +28,7 @@ object ChatCoordinator {
         // Get conversation history
         context.ask(conversationManager, GetHistory.apply) {
           case scala.util.Success(history) => 
-            context.log.info("Successfully received history")
+            // context.log.info("Successfully received history")
             HistoryReceived(history, request.userMessage, request.replyTo)
           case scala.util.Failure(ex) =>
             context.log.error("Failed to get history: {}", ex.getMessage, ex)
@@ -52,7 +52,7 @@ object ChatCoordinator {
         // Send to LLM
         context.ask(llmClient, (ref: ActorRef[LLMResponse]) => SendToLLM(allMessages, ref)) {
           case scala.util.Success(response) => 
-            context.log.info("Successfully received LLM response")
+            // context.log.info("Successfully received LLM response")
             LLMResponseReceived(response, originalReplyTo)
           case scala.util.Failure(ex) =>
             context.log.error("Failed to get LLM response: {}", ex.getMessage, ex)
@@ -64,7 +64,7 @@ object ChatCoordinator {
       case LLMResponseReceived(response, originalReplyTo) =>
         response match {
           case LLMSuccess(content) =>
-            context.log.info("Received successful LLM response")
+            // context.log.info("Received successful LLM response")
             
             // Add assistant message to history
             val assistantMsg = Message("assistant", content)

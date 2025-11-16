@@ -68,8 +68,9 @@ object AkkaQuickstart extends App {
   }
   
   println("\nShutting down...")
+  system.terminate()
   try {
-    Await.result(system.terminate(), 5.seconds)
+    Await.result(system.whenTerminated, 5.seconds)
   } catch {
     case _: Exception => // Ignore timeout on shutdown
   }

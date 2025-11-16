@@ -4,8 +4,8 @@ version := "1.0"
 
 scalaVersion := s"3.3.7"
 
-lazy val akkaVersion = "2.6.20"
-lazy val akkaHttpVersion = "10.2.10"
+lazy val pekkoVersion = "1.0.2"
+lazy val pekkoHttpVersion = "1.0.1"
 lazy val circeVersion = "0.14.6"
 
 // Run in a separate JVM, to make sure sbt waits until all threads have
@@ -18,14 +18,14 @@ fork := true
 run / fork := false
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
-  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+  "org.apache.pekko" %% "pekko-actor-typed" % pekkoVersion,
+  "org.apache.pekko" %% "pekko-stream" % pekkoVersion,
+  "org.apache.pekko" %% "pekko-http" % pekkoHttpVersion,
+  "org.apache.pekko" %% "pekko-http-spray-json" % pekkoHttpVersion,
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
   "ch.qos.logback" % "logback-classic" % "1.5.18",
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
+  "org.apache.pekko" %% "pekko-actor-testkit-typed" % pekkoVersion % Test,
   "org.scalatest" %% "scalatest" % "3.2.15" % Test
 )

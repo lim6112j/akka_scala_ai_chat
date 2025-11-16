@@ -1,13 +1,13 @@
 package com.example
 
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import com.example.ai.ChatCoordinator
 import com.example.ai.Models._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.io.StdIn
-import akka.actor.typed.scaladsl.AskPattern._
+import org.apache.pekko.actor.typed.scaladsl.AskPattern._
 
 object AkkaQuickstart extends App {
   

@@ -3,6 +3,8 @@ package com.example.ai
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import com.example.ai.Models._
+import akka.util.Timeout
+import scala.concurrent.duration._
 
 object ChatCoordinator {
   
@@ -12,6 +14,8 @@ object ChatCoordinator {
   private case class LLMResponseReceived(response: LLMResponse, originalReplyTo: ActorRef[ChatResponse]) extends CoordinatorCommand
   
   def apply(apiKey: String): Behavior[CoordinatorCommand] = Behaviors.setup { context =>
+    implicit val timeout: Timeout = Timeout(30.seconds)
+    
     val llmClient = context.spawn(LLMClient(apiKey), "llm-client")
     val conversationManager = context.spawn(ConversationManager(), "conversation-manager")
     

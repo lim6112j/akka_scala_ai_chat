@@ -7,6 +7,7 @@ import com.example.ai.Models._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.io.StdIn
+import akka.actor.typed.scaladsl.AskPattern._
 
 object AkkaQuickstart extends App {
   
@@ -29,7 +30,7 @@ object AkkaQuickstart extends App {
     }
   }, "ai-chat-system")
   
-  implicit val ec = system.executionContext
+  implicit val ec: scala.concurrent.ExecutionContext = system.executionContext
   
   // Interactive chat loop
   var continue = true

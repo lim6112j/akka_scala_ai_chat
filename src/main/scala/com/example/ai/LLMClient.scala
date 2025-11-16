@@ -131,9 +131,4 @@ object LLMClient {
         Behaviors.same
     }
   }
-  
-  // Internal messages
-  private case class ProcessResponse(response: HttpResponse, replyTo: ActorRef[LLMResponse]) extends LLMCommand
-  private case class ProcessError(error: Throwable, replyTo: ActorRef[LLMResponse]) extends LLMCommand
-  private case object NoOp extends LLMCommand
 }

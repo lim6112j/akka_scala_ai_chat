@@ -22,6 +22,9 @@ object Models {
     messages: List[Message],
     replyTo: ActorRef[LLMResponse]
   ) extends LLMCommand
+  private[ai] case class ProcessResponse(response: akka.http.scaladsl.model.HttpResponse, replyTo: ActorRef[LLMResponse]) extends LLMCommand
+  private[ai] case class ProcessError(error: Throwable, replyTo: ActorRef[LLMResponse]) extends LLMCommand
+  private[ai] case object NoOp extends LLMCommand
   
   sealed trait LLMResponse
   case class LLMSuccess(content: String) extends LLMResponse

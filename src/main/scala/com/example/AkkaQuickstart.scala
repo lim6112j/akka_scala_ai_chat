@@ -21,14 +21,7 @@ object AkkaQuickstart extends App {
   println("=== AI Chat Application ===")
   println("Type your messages and press Enter. Type 'quit' to exit.\n")
   
-  val system = ActorSystem(Behaviors.setup[ChatCoordinator.CoordinatorCommand] { context =>
-    val coordinator = context.spawn(ChatCoordinator(apiKey), "chat-coordinator")
-    
-    Behaviors.receiveMessage { msg =>
-      coordinator ! msg
-      Behaviors.same
-    }
-  }, "ai-chat-system")
+  val system = ActorSystem(ChatCoordinator(apiKey), "ai-chat-system")
   
   implicit val ec: scala.concurrent.ExecutionContext = system.executionContext
   

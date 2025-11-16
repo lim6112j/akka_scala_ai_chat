@@ -14,6 +14,9 @@ lazy val circeVersion = "0.14.6"
 // sbt tasks, consider https://github.com/spray/sbt-revolver/
 fork := true
 
+// Disable forking for run task to allow stdin input
+run / fork := false
+
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,

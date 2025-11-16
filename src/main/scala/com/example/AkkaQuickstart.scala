@@ -36,7 +36,13 @@ object AkkaQuickstart extends App {
   var continue = true
   while (continue) {
     print("You: ")
-    val input = StdIn.readLine()
+    System.out.flush()
+    
+    val input = try {
+      StdIn.readLine()
+    } catch {
+      case _: Exception => null
+    }
     
     if (input == null || input.trim.toLowerCase == "quit") {
       continue = false
@@ -62,7 +68,11 @@ object AkkaQuickstart extends App {
   }
   
   println("\nShutting down...")
-  system.terminate()
-  Await.result(system.whenTerminated, 10.seconds)
+  val terminated = system.terminate()
+  try {
+    Await.result(terminated, 5.seconds)
+  } catch {
+    case _: Exception => // Ignore timeout on shutdown
+  }
   println("Goodbye!")
 }

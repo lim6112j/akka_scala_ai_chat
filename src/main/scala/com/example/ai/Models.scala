@@ -1,6 +1,6 @@
 package com.example.ai
 
-import akka.actor.typed.ActorRef
+import org.apache.pekko.actor.typed.ActorRef
 
 object Models {
   // Message types for the chat system
@@ -22,7 +22,7 @@ object Models {
     messages: List[Message],
     replyTo: ActorRef[LLMResponse]
   ) extends LLMCommand
-  private[ai] case class ProcessResponse(response: akka.http.scaladsl.model.HttpResponse, replyTo: ActorRef[LLMResponse]) extends LLMCommand
+  private[ai] case class ProcessResponse(response: org.apache.pekko.http.scaladsl.model.HttpResponse, replyTo: ActorRef[LLMResponse]) extends LLMCommand
   private[ai] case class ProcessError(error: Throwable, replyTo: ActorRef[LLMResponse]) extends LLMCommand
   private[ai] case object NoOp extends LLMCommand
   
